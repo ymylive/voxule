@@ -6,20 +6,6 @@ import VoxlueServices
 
 /// 声音圈列表 —— 自建的与受邀加入的圈都在这里。
 struct CircleListView: View {
-    /// 给圈用的 emoji 池 —— 涵盖家、自然、夜、茶、相机几种"圈"的氛围。
-    /// 改池子前注意：池长决定 hash 落点，同名圈的 emoji 会随之漂移，不影响数据。
-    private static let circleEmojiPool: [String] = [
-        "🏠", "👨‍👩‍👧", "👫", "🌿", "🎵", "🌙", "🍵", "🌊", "🕯", "📷"
-    ]
-
-    /// 由圈名 hash 出 emoji，同名稳定。空名 fallback 一个空心圆点。
-    private static func emoji(forName name: String) -> String {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty { return "○" }
-        let hash = abs(trimmed.hashValue)
-        return circleEmojiPool[hash % circleEmojiPool.count]
-    }
-
     @Environment(ServiceContainer.self) private var services
 
     @Query(sort: \VoxlueData.Capsule.createdAt, order: .reverse)
@@ -145,7 +131,7 @@ struct CircleListView: View {
                 CircleRow(
                     circle: circle,
                     latestCapsuleTitle: latestTitle(forCircle: circle.id),
-                    emoji: Self.emoji(forName: circle.name)
+                    emoji: CircleEmoji.circleEmoji(forName: circle.name)
                 )
             }
             .buttonStyle(.plain)
@@ -215,9 +201,8 @@ private struct CircleRow: View {
                     }
                 }
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(VoxlueColor.darkroomGray)
+                // 不自绘 chevron —— List 的 NavigationLink 自带系统 disclosure，
+                // 再画一枚会双箭头（#85 dark 巡检发现）。样片墙行同此形态。
             }
         }
     }

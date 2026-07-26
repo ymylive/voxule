@@ -24,16 +24,6 @@ struct CircleDetailView: View {
         return "\(count) 位成员 · 建于 \(date)"
     }
 
-    private static let memberEmojiPool: [String] = [
-        "👤", "🧑", "👩", "👨", "🧒", "👵", "👴", "🧓", "👶", "🧑‍🎓", "🧑‍🍳", "🧑‍🎨"
-    ]
-
-    private static func emoji(forMember name: String) -> String {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty { return "👤" }
-        return memberEmojiPool[abs(trimmed.hashValue) % memberEmojiPool.count]
-    }
-
     var body: some View {
         List {
             Section {
@@ -52,7 +42,7 @@ struct CircleDetailView: View {
             Section {
                 ForEach(members) { member in
                     HStack(spacing: VoxlueSpacing.md) {
-                        Text(Self.emoji(forMember: member.name))
+                        Text(CircleEmoji.memberEmoji(forName: member.name))
                             .font(.system(size: 24))
                             .frame(width: 36, height: 36)
                             .background(VoxlueColor.paperShadow.opacity(0.4), in: Circle())

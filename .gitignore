@@ -14,3 +14,6 @@ build/
 # 头脑风暴可视化伴侣（不入库）
 .superpowers/
 *-standalone.html
+
+# 屏幕巡检截图（scripts/tour-shots.sh 生成的产物，不入库）
+design/tour-shots/

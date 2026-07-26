@@ -19,7 +19,6 @@ struct CapsuleDetailView: View {
     @Environment(AppDependencies.self) private var dependencies: AppDependencies?
 
     @State private var loaded = false
-    @State private var loadFailed = false
     @State private var confirmingDelete = false
     @State private var showingNoteEditor = false
     @State private var editingNote = ""
@@ -51,11 +50,6 @@ struct CapsuleDetailView: View {
         .toolbar { toolbarContent }
         .onAppear(perform: prepare)
         .onDisappear { player.pause() }
-        .alert("没能放出这段声音", isPresented: $loadFailed) {
-            Button("好") {}
-        } message: {
-            Text("音频读取失败。")
-        }
         .alert("划掉这枚胶囊？", isPresented: $confirmingDelete) {
             Button("划掉", role: .destructive) { performDelete() }
             Button("不了", role: .cancel) {}
@@ -275,11 +269,15 @@ struct CapsuleDetailView: View {
         }
     }
 
-    /// 滑杆下的上下文批注：播放中 / 听到一半 / 否则隐藏。
+    /// 滑杆下的上下文批注：读取失败 / 播放中 / 听到一半 / 否则隐藏。
+    /// 读取失败走 inline 批注而不是 alert —— 进详情只是「看」，还没「听」，
+    /// 一进门就弹 modal 是打脸（#85 巡检发现空音频胶囊进页即弹窗）。
     private var playbackMarginNote: String? {
-        if player.isPlaying {
+        if !loaded {
+            return "这段声音没能读出来。"
+        } else if player.isPlaying {
             return "正在听 →"
-        } else if loaded && player.progress > 0 {
+        } else if player.progress > 0 {
             return "听到一半，可以接着"
         } else {
             return nil
@@ -492,7 +490,6 @@ struct CapsuleDetailView: View {
     private func prepare() {
         guard let data = capsule.audioData, !data.isEmpty else {
             loaded = false
-            loadFailed = true
             return
         }
         do {
@@ -502,10 +499,8 @@ struct CapsuleDetailView: View {
             player.pause()
             try player.load(data)
             loaded = true
-            loadFailed = false
         } catch {
             loaded = false
-            loadFailed = true
         }
     }
 
