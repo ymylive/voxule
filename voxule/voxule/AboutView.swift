@@ -76,7 +76,9 @@ struct AboutView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .top, spacing: VoxlueSpacing.md) {
-                    ForEach(Array(zip(VoxlueColor.palette, VoxlueColor.paletteNames).enumerated()), id: \.offset) { _, pair in
+                    // adaptivePalette 而非 palette —— 后者钉死 light 端，dark 下
+                    // 会与整页翻面自相矛盾（#85 巡检发现纸基 swatch 在暗房里发亮）。
+                    ForEach(Array(zip(VoxlueColor.adaptivePalette, VoxlueColor.paletteNames).enumerated()), id: \.offset) { _, pair in
                         VStack(spacing: VoxlueSpacing.xs) {
                             RoundedRectangle(cornerRadius: VoxlueRadius.stamp, style: .continuous)
                                 .fill(pair.0)

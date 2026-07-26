@@ -44,9 +44,9 @@ struct DevToolsView: View {
                 Text("种子数据")
             } footer: {
                 if isCloudKitMirrored {
-                    Text("示例胶囊覆盖三种锁、四种状态、两种 recipient；音频留空，回放会显示「没能放出这段声音」属正常。\n\n清空按钮在 CloudKit 镜像模式下禁用 —— 避免顺手把 iCloud 私有库的真胶囊也一并删掉。要清空请在非 iCloud 账号的模拟器上重装 App。")
+                    Text("示例胶囊覆盖三种锁、四种状态、两种 recipient；音频是程序生成的 1.6s 提示音，可以真回放。\n\n清空按钮在 CloudKit 镜像模式下禁用 —— 避免顺手把 iCloud 私有库的真胶囊也一并删掉。要清空请在非 iCloud 账号的模拟器上重装 App。")
                 } else {
-                    Text("示例胶囊覆盖三种锁、四种状态、两种 recipient；音频留空，回放会显示「没能放出这段声音」属正常。重复点击「种入」会累积，要重来请先「清空」。")
+                    Text("示例胶囊覆盖三种锁、四种状态、两种 recipient；音频是程序生成的 1.6s 提示音，可以真回放。重复点击「种入」会累积，要重来请先「清空」。")
                 }
             }
 

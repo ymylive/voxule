@@ -64,29 +64,24 @@ struct voxuleApp: App {
     init() {
         _ = Self._fontsRegistered
 
-        // 优先用生产配置 —— 镜像到 CloudKit 私有库。
-        // 若 CloudKit 不可用（未登录 iCloud、缺少能力配置等），降级为纯本地存储。
+        // 屏幕巡检模式（仅 DEBUG，见 ScreenTour）：内存容器 + 种子数据 + 全套假服务，
+        // 跳过 CloudKit / 真麦克风 / 权限弹窗，让 simctl 截图可重复。
         let container: ModelContainer
-        if let cloudContainer = try? VoxlueModelContainer.make() {
-            container = cloudContainer
-            Self.isCloudKitMirrored = true
+        #if DEBUG
+        if let tour = ScreenTour.target {
+            ScreenTour.primeDefaults(for: tour)
+            container = ScreenTour.makeSeededContainer()
         } else {
-            do {
-                container = try ModelContainer(
-                    for: VoxlueModelContainer.schema,
-                    configurations: ModelConfiguration(
-                        schema: VoxlueModelContainer.schema,
-                        cloudKitDatabase: .none
-                    )
-                )
-            } catch {
-                fatalError("无法创建本地 ModelContainer：\(error)")
-            }
+            container = Self.makeProductionContainer()
         }
+        #else
+        container = Self.makeProductionContainer()
+        #endif
         modelContainer = container
 
-        // UI 测试用 -uiTestFakeAudio 启动参数注入假音频服务，避开真麦克风与权限弹窗。
-        if ProcessInfo.processInfo.arguments.contains("-uiTestFakeAudio") {
+        // UI 测试用 -uiTestFakeAudio 启动参数注入假音频服务，避开真麦克风与权限弹窗；
+        // 屏幕巡检同理。
+        if ProcessInfo.processInfo.arguments.contains("-uiTestFakeAudio") || Self.isScreenTour {
             appEnvironment = .preview()
         } else {
             appEnvironment = .live()
@@ -111,7 +106,11 @@ struct voxuleApp: App {
         deps.registerBackgroundTasks()
         _dependencies = State(initialValue: deps)
 
-        let serviceContainer = ServiceContainer(modelContext: container.mainContext)
+        // 巡检下圈服务走 Fake（内存圈、假邀请链接），避免真 CloudKit 查询把
+        // 圈列表卡在 loading 态。
+        let serviceContainer = Self.isScreenTour
+            ? ServiceContainer.preview()
+            : ServiceContainer(modelContext: container.mainContext)
         _services = State(initialValue: serviceContainer)
         _shareRouter = State(
             initialValue: DeepLinkRouter(circleService: serviceContainer.circleService)
@@ -119,9 +118,52 @@ struct voxuleApp: App {
         _healthEnv = State(initialValue: HealthEnv())
     }
 
+    /// 生产容器 —— 优先镜像到 CloudKit 私有库；
+    /// 若 CloudKit 不可用（未登录 iCloud、缺少能力配置等），降级为纯本地存储。
+    private static func makeProductionContainer() -> ModelContainer {
+        if let cloudContainer = try? VoxlueModelContainer.make() {
+            isCloudKitMirrored = true
+            return cloudContainer
+        }
+        do {
+            return try ModelContainer(
+                for: VoxlueModelContainer.schema,
+                configurations: ModelConfiguration(
+                    schema: VoxlueModelContainer.schema,
+                    cloudKitDatabase: .none
+                )
+            )
+        } catch {
+            fatalError("无法创建本地 ModelContainer：\(error)")
+        }
+    }
+
+    /// 本进程是否为屏幕巡检启动（仅 DEBUG 可能为真）。
+    private static var isScreenTour: Bool {
+        #if DEBUG
+        ScreenTour.target != nil
+        #else
+        false
+        #endif
+    }
+
+    /// 场景根 —— 巡检模式换成对应屏的宿主，正常启动是四标签骨架。
+    @ViewBuilder
+    private var rootContent: some View {
+        #if DEBUG
+        if let tour = ScreenTour.target {
+            ScreenTourHost(target: tour)
+        } else {
+            RootTabView()
+        }
+        #else
+        RootTabView()
+        #endif
+    }
+
     var body: some Scene {
         WindowGroup {
-            RootTabView()
+            rootContent
                 .tint(VoxlueColor.vermillion)
                 .environment(\.appEnvironment, appEnvironment)
                 .environment(dependencies)
@@ -129,8 +171,11 @@ struct voxuleApp: App {
                 .environment(shareRouter)
                 .environment(healthEnv)
                 .task {
-                    // 测试环境不申请真实权限 —— 系统弹窗会挡住 / 卡住 XCUITest（见 bootstrap 注释）。
-                    await dependencies.bootstrap(requestPermissions: !Self.isRunningTests)
+                    // 测试环境与屏幕巡检不申请真实权限 —— 系统弹窗会挡住 / 卡住
+                    // XCUITest（见 bootstrap 注释），也会盖住巡检截图。
+                    await dependencies.bootstrap(
+                        requestPermissions: !Self.isRunningTests && !Self.isScreenTour
+                    )
                     // 排第一次浮现唤醒 —— .backgroundTask 只注册处理器、不提交请求，
                     // 没有这一步整条 agent 闭环永不触发。幂等：同标识请求会被替换。
                     await Self.scheduleNextSurfacing()

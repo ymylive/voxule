@@ -19,19 +19,6 @@ struct CreateCircleView: View {
         name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    /// 给圈用的 emoji 池 —— 与 CircleListView 同一份，顺序一致才能保证预览和列表里看到同一个 emoji。
-    /// 改池子前注意：池长决定 hash 落点，同名圈的 emoji 会随之漂移。
-    private static let circleEmojiPool: [String] = [
-        "🏠", "👨‍👩‍👧", "👫", "🌿", "🎵", "🌙", "🍵", "🌊", "🕯", "📷"
-    ]
-
-    /// 由圈名 hash 出 emoji，空名返回空心圆点。逻辑与 CircleListView.emoji(forName:) 等价。
-    private static func emoji(for name: String) -> String {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty { return "○" }
-        return circleEmojiPool[abs(trimmed.hashValue) % circleEmojiPool.count]
-    }
-
     var body: some View {
         NavigationStack {
             Form {
@@ -49,7 +36,8 @@ struct CreateCircleView: View {
                         .frame(maxWidth: .infinity, alignment: .trailing)
 
                     HStack(spacing: VoxlueSpacing.sm) {
-                        Text(Self.emoji(for: trimmedName))
+                        // 与列表 / 详情共享 CircleEmoji 稳定映射 —— 预览所见即列表所得。
+                        Text(CircleEmoji.circleEmoji(forName: trimmedName))
                             .font(.system(size: 24))
                             .frame(width: 32, height: 32)
                             .background(VoxlueColor.paperShadow.opacity(0.4), in: Circle())

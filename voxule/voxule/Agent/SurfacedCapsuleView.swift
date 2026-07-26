@@ -109,11 +109,13 @@ struct SurfacedCapsuleView: View {
                     .overlay(alignment: .topTrailing) {
                         // Caveat 手写边注：像冲洗师在样片角落落了一句。
                         // fixedSize 防自动换行；旋转仅在常规字号下走，避免 AX 大字段偏移过远。
+                        // 上移 lg 让批注骑在卡顶边上（半出半进）—— 只探进卡内边距区，
+                        // 不压到标题（#85 dark 巡检发现批注与标题重叠）。
                         MarginNote("今天，它想被你听到。")
                             .fixedSize(horizontal: true, vertical: false)
                             .rotationEffect(dynamicTypeSize <= .xxLarge ? .degrees(2) : .zero)
                             .padding(.trailing, VoxlueSpacing.sm)
-                            .offset(y: -VoxlueSpacing.xs)
+                            .offset(y: -VoxlueSpacing.lg)
                     }
 
                     Button("等等再说") {
