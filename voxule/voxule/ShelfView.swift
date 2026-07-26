@@ -354,6 +354,10 @@ struct ShelfView: View {
             }
             .padding(.vertical, VoxlueSpacing.lg)
         }
+        // region 标识 —— .contain 让整张小样张成为 VoiceOver rotor「容器」里
+        // 可跳转的一站，label 给这一站起名（#86）。
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("样片小样张")
     }
 
     /// contact-sheet 首切提示横幅 —— MarginNote 形态 + 朱红「知道了」按钮，
@@ -364,11 +368,7 @@ struct ShelfView: View {
         HStack(alignment: .top, spacing: VoxlueSpacing.md) {
             MarginNote("长按一张可分享或划掉")
             Spacer(minLength: VoxlueSpacing.sm)
-            Button {
-                withAnimation(.easeOut(duration: 0.25)) {
-                    contactSheetHintSeen = true
-                }
-            } label: {
+            Button(action: dismissContactSheetHint) {
                 Text("知道了")
                     .font(VoxlueTypography.caption)
                     .foregroundStyle(VoxlueColor.vermillion)
@@ -377,6 +377,21 @@ struct ShelfView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("我知道了，关闭提示")
+        }
+        // 整块合并成单元素 —— MarginNote 短画 + 文字 + 按钮一次读完，
+        // 而不是三段散元素让人摸不清「这是一条可关闭的提示」（#86）。
+        // .combine 会把子按钮动作降为 rotor 自定义操作，故补一个默认
+        // accessibilityAction，保证 hint 里说的「双击关闭」真的可用。
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
+        .accessibilityHint("双击「知道了」可关闭此提示")
+        .accessibilityAction { dismissContactSheetHint() }
+    }
+
+    /// 关闭 contact-sheet 首切提示 —— 可视按钮与 VoiceOver 默认操作共用一份实现。
+    private func dismissContactSheetHint() {
+        withAnimation(.easeOut(duration: 0.25)) {
+            contactSheetHintSeen = true
         }
     }
 
