@@ -420,14 +420,14 @@ v1 路线图（§4–§10）已完整交付。下期任务按两轨梳理 ——
 
 按价值优先级（高优先级两项已落 GitHub Issues）：
 
-| 优先级 | 项目 | Issue / 触发 |
-|---|---|---|
-| 高 | **真机 / 模拟器 13 屏 dark mode 目视验收** | #85 |
-| 高 | **contact-sheet a11y 加固** | #86 |
-| 中 | **PhotoCard / CapsuleRow Preview 扩样** | 加长 meta / 长 title 变体让 lineLimit(2) 数学回归靠 Preview 抓 |
-| 中 | **微动画 polish** | ShelfView 滚动惯性、PhotoCard 按下手感、bucket header 出现 `.transition` |
-| 低 | **用户头像 emoji 池扩展** | `CircleEmojiHash` 当前 hash 池较窄 |
-| 低 | **iPad 适配 spike** | contact-sheet 应 3 列；split detail；v2 前先做 spike |
+| 优先级 | 项目 | Issue / 触发 | 状态 |
+|---|---|---|---|
+| 高 | **真机 / 模拟器 13 屏 dark mode 目视验收** | #85 | ✅ v1.2（§12）模拟器侧完成，issue 已关 |
+| 高 | **contact-sheet a11y 加固** | #86 | ✅ 代码侧 PR #91；VoiceOver 实听留真机 |
+| 中 | **PhotoCard / CapsuleRow Preview 扩样** | 加长 meta / 长 title 变体让 lineLimit(2) 数学回归靠 Preview 抓 | ✅ PR #93 |
+| 中 | **微动画 polish** | ShelfView 滚动惯性、PhotoCard 按下手感、bucket header 出现 `.transition` | ✅ PR #93 |
+| 低 | **用户头像 emoji 池扩展** | `CircleEmojiHash` 当前 hash 池较窄 | ✅ PR #92（连稳定性一起修） |
+| 低 | **iPad 适配 spike** | contact-sheet 应 3 列；split detail；v2 前先做 spike | 未启动 |
 
 ### 11.2 协作者轨剩余项（v1 末延期、待协作者推进）
 
@@ -460,3 +460,19 @@ v1 路线图（§4–§10）已完整交付。下期任务按两轨梳理 ——
 - **v2 方向**等用户主动提需求时再走 brainstorming skill 展开。
 
 GitHub Labels：`frontend-track`（绿）= 用户负责、`coworker-track`（红）= 协作者负责。
+
+---
+
+## 12. v1.2 前端批交付记录（2026-07-26）
+
+§11.1 前端轨除 iPad spike 外全部交付，三个 PR：
+
+| PR | 内容 |
+|---|---|
+| #91 | contact-sheet a11y 加固（#86 代码侧）：提示横幅 `.combine`+`.isHeader`+hint+默认 `accessibilityAction`；grid `.contain` region「样片小样张」 |
+| #92 | #85 dark 巡检落地：**ScreenTour 截图基建**（DEBUG `-uiTourScreen` 直达 19 屏 + `scripts/tour-shots.sh` simctl 逐屏截图）；巡检修复四处 —— 浮现卡批注重叠、圈列表双 chevron、详情页空音频进页弹 alert 改 inline 批注、About 八色 swatch 改 `adaptivePalette`；`CircleEmoji` FNV-1a 稳定映射（`String.hashValue` 每进程加种，同名稳定从未成立）+ 池扩展 + 固定向量测试；DevSampleData 音频改程序生成 1.6s WAV 可真回放 |
+| #93 | Preview 长字段扩样（PhotoCard/NegativeCard/CapsuleRow 全宽+半宽变体）；微动画（`.pressableCard` 按下手感、contact-sheet 段落进场 transition 与 `.scrollTransition` 滚动惯性） |
+
+**验收方式沉淀**：本环境跑不了 XCUITest，目视验收固化为 `scripts/run-sim.sh --build-only && scripts/tour-shots.sh [--appearance light]`，产物 `design/tour-shots/`（gitignore）。dark 19 屏 + light 抽查 6 屏逐张复核通过；#85 已关，#86 留 VoiceOver 真机实听一条。
+
+**剩余开放**：前端轨仅 iPad spike（低优先级、v2 前置）；协作者轨 #78–#84 全部保持开放（需真机/账号/部署）。
