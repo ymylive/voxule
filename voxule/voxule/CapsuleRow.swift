@@ -1,6 +1,7 @@
 import SwiftUI
 import VoxlueData
 import VoxlueDesign
+import VoxlueServices   // Preview 用 FakeAudioRecording.fakeWaveform
 
 /// 样片墙的一张相片 —— 按胶囊状态分两种形态：
 /// - `.buried`：NegativeCard 反相（未显影、影像偏淡、深底亮字）
@@ -79,5 +80,56 @@ struct CapsuleRow: View {
         case .developed: .developed
         case .opened: .opened
         }
+    }
+}
+
+// 长字段回归（§11.1）：真实数据路径下的 title 尾截 + meta lineLimit(2) 换行 ——
+// PhotoCard / NegativeCard 的 Preview 盯组件本身，这里盯 metaLine 拼接后的整串。
+#Preview("长题长地名 · 列表全宽") {
+    ZStack {
+        VoxlueColor.paper.ignoresSafeArea()
+        VStack(spacing: VoxlueSpacing.md) {
+            CapsuleRow(capsule: VoxlueData.Capsule(
+                title: "外婆在厨房里一边炒菜一边哼的那首老歌",
+                duration: 756,
+                waveform: FakeAudioRecording.fakeWaveform,
+                state: .developed,
+                lock: .place(latitude: 31.2, longitude: 121.4,
+                             radius: 100, placeName: "上海市徐汇区衡山路八号老洋房的天井")
+            ))
+            CapsuleRow(capsule: VoxlueData.Capsule(
+                title: "潜伏中的长标题也一样要被优雅地截断掉",
+                duration: 48,
+                waveform: FakeAudioRecording.fakeWaveform,
+                state: .buried,
+                lock: .place(latitude: 39.9, longitude: 116.4,
+                             radius: 150, placeName: "北京市东城区景山前街四号筒子河边")
+            ))
+        }
+        .padding(VoxlueSpacing.lg)
+    }
+}
+
+#Preview("长题长地名 · contact-sheet 半宽") {
+    ZStack {
+        VoxlueColor.paper.ignoresSafeArea()
+        HStack(alignment: .top, spacing: VoxlueSpacing.md) {
+            CapsuleRow(capsule: VoxlueData.Capsule(
+                title: "外婆在厨房里哼的那首老歌",
+                duration: 756,
+                waveform: FakeAudioRecording.fakeWaveform,
+                state: .developed,
+                lock: .place(latitude: 31.2, longitude: 121.4,
+                             radius: 100, placeName: "上海市徐汇区衡山路八号老洋房的天井")
+            ))
+            CapsuleRow(capsule: VoxlueData.Capsule(
+                title: "短题",
+                duration: 48,
+                waveform: FakeAudioRecording.fakeWaveform,
+                state: .opened,
+                lock: .mood(notBefore: nil)
+            ))
+        }
+        .padding(VoxlueSpacing.lg)
     }
 }

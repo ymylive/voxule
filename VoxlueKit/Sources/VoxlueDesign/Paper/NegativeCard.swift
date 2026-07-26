@@ -77,3 +77,28 @@ public struct NegativeCard<Image: View>: View {
         .padding(VoxlueSpacing.xl)
     }
 }
+
+// 长字段回归（§11.1）：title 应尾截、meta 两行内换行保地名，与 PhotoCard 同一套数学。
+// 半宽两列是 contact-sheet 的真实约束 —— 改片基排版先看这里。
+#Preview("长题长 meta · 半宽两列") {
+    ZStack {
+        VoxlueColor.paper.ignoresSafeArea()
+        HStack(alignment: .top, spacing: VoxlueSpacing.md) {
+            NegativeCard(
+                title: "外婆在厨房里哼的那首老歌",
+                meta: "地点锁 · 12:36 · 上海市徐汇区衡山路八号老洋房的天井",
+                seal: .buried
+            ) {
+                Rectangle().fill(VoxlueColor.graphite)
+            }
+            NegativeCard(
+                title: "短题",
+                meta: "情绪锁 · 0:48",
+                seal: .buried
+            ) {
+                Rectangle().fill(VoxlueColor.graphite)
+            }
+        }
+        .padding(VoxlueSpacing.lg)
+    }
+}

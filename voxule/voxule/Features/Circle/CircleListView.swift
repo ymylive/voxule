@@ -134,7 +134,8 @@ struct CircleListView: View {
                     emoji: CircleEmoji.circleEmoji(forName: circle.name)
                 )
             }
-            .buttonStyle(.plain)
+            // 与样片墙行同一手感 —— 按下轻沉，松手回弹（§11.1 微动画）。
+            .buttonStyle(.pressableCard)
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
             .listRowInsets(EdgeInsets(

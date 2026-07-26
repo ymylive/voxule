@@ -71,6 +71,17 @@ public struct PhotoCard<Image: View>: View {
     }
 }
 
+// 占位声纹：等宽竖条。波形条永远盖在负片黑图像区上，用固定 light。
+private var previewWaveform: some View {
+    HStack(spacing: 3) {
+        ForEach(0..<28, id: \.self) { i in
+            Capsule()
+                .fill(VoxlueColor.paperLight.opacity(0.85))
+                .frame(width: 3, height: CGFloat(12 + (i * 7) % 70))
+        }
+    }
+}
+
 #Preview {
     ZStack {
         VoxlueColor.paper.ignoresSafeArea()
@@ -78,15 +89,47 @@ public struct PhotoCard<Image: View>: View {
             title: "咖啡馆的雨",
             meta: "31.21, 121.43 · 0:48 · 阴"
         ) {
-            // 占位声纹：等宽竖条。波形条永远盖在负片黑图像区上，用固定 light。
-            HStack(spacing: 3) {
-                ForEach(0..<28, id: \.self) { i in
-                    Capsule()
-                        .fill(VoxlueColor.paperLight.opacity(0.85))
-                        .frame(width: 3, height: CGFloat(12 + (i * 7) % 70))
-                }
-            }
+            previewWaveform
         }
         .padding(VoxlueSpacing.xl)
+    }
+}
+
+// 长字段回归（§11.1）：title lineLimit(1) 应尾截、meta lineLimit(2) 应换行保地名。
+// 全宽 + contact-sheet 半宽两种排布 —— lineLimit(2) 的数学主要在半宽下失守，
+// 改片基排版时先看这两个 Preview 有没有把地点截丢。
+#Preview("长题长 meta · 全宽") {
+    ZStack {
+        VoxlueColor.paper.ignoresSafeArea()
+        PhotoCard(
+            title: "外婆在厨房里一边炒菜一边哼的那首老歌",
+            meta: "地点锁 · 12:36 · 上海市徐汇区衡山路八号老洋房的天井"
+        ) {
+            previewWaveform
+        }
+        .padding(VoxlueSpacing.xl)
+    }
+}
+
+#Preview("长题长 meta · 半宽两列") {
+    ZStack {
+        VoxlueColor.paper.ignoresSafeArea()
+        HStack(alignment: .top, spacing: VoxlueSpacing.md) {
+            PhotoCard(
+                title: "外婆在厨房里哼的那首老歌",
+                meta: "地点锁 · 12:36 · 上海市徐汇区衡山路八号老洋房的天井",
+                seal: .developed
+            ) {
+                previewWaveform
+            }
+            PhotoCard(
+                title: "短题",
+                meta: "情绪锁 · 0:48",
+                seal: .opened
+            ) {
+                previewWaveform
+            }
+        }
+        .padding(VoxlueSpacing.lg)
     }
 }

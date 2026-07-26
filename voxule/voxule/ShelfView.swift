@@ -230,9 +230,9 @@ struct ShelfView: View {
                         CapsuleRow(capsule: row.capsule)
                     }
                 }
-                // 不加 .plain 会在每张 PhotoCard 右侧露一道系统灰 disclosure chevron，
-                // 与暗房纸感冲突。.plain 移除 chevron 与默认高亮，行仍可点。
-                .buttonStyle(.plain)
+                // pressableCard：移除系统默认高亮（同 .plain），并给按下一个
+                // 轻微下沉手感 —— 相纸被指尖按住的实感（§11.1 微动画）。
+                .buttonStyle(.pressableCard)
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(
@@ -328,36 +328,53 @@ struct ShelfView: View {
                 // 用 \.offset 会让插入新片时第一段被整体 invalidate（diff 错位），
                 // grid 内所有 NavigationLink 被迫 rebuild、SealStamp 入场动画再跑一遍。
                 ForEach(bucketGroups, id: \.bucket) { group in
-                    VStack(alignment: .leading, spacing: VoxlueSpacing.md) {
-                        // contact-sheet 段头已挂在外层 lg padding 容器里，无需再额外缩进。
-                        sectionHeader(group.bucket.label)
-                            .padding(.leading, 0)
-                        LazyVGrid(
-                            columns: [
-                                GridItem(.flexible(), spacing: VoxlueSpacing.md),
-                                GridItem(.flexible(), spacing: VoxlueSpacing.md),
-                            ],
-                            spacing: VoxlueSpacing.md
-                        ) {
-                            ForEach(group.capsules, id: \.id) { capsule in
-                                NavigationLink(value: capsule.id) {
-                                    CapsuleRow(capsule: capsule)
-                                }
-                                // 同列表模式 —— 移系统灰 chevron / 默认高亮。
-                                .buttonStyle(.plain)
-                                .contextMenu { capsuleContextMenu(capsule) }
-                            }
-                        }
-                    }
-                    .padding(.horizontal, VoxlueSpacing.lg)
+                    bucketSection(group)
                 }
             }
             .padding(.vertical, VoxlueSpacing.lg)
+            // 搜索词收敛 bucket 分组时，段落淡入 + 自顶轻移进场，
+            // 而不是硬切（§11.1 微动画：bucket header 出现 .transition）。
+            .animation(.easeOut(duration: 0.25), value: query)
         }
         // region 标识 —— .contain 让整张小样张成为 VoiceOver rotor「容器」里
         // 可跳转的一站，label 给这一站起名（#86）。
         .accessibilityElement(children: .contain)
         .accessibilityLabel("样片小样张")
+    }
+
+    /// contact-sheet 的一段 bucket —— 段头 + 2 列网格。
+    private func bucketSection(
+        _ group: (bucket: Bucket, capsules: [VoxlueData.Capsule])
+    ) -> some View {
+        VStack(alignment: .leading, spacing: VoxlueSpacing.md) {
+            // contact-sheet 段头已挂在外层 lg padding 容器里，无需再额外缩进。
+            sectionHeader(group.bucket.label)
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: VoxlueSpacing.md),
+                    GridItem(.flexible(), spacing: VoxlueSpacing.md),
+                ],
+                spacing: VoxlueSpacing.md
+            ) {
+                ForEach(group.capsules, id: \.id) { capsule in
+                    NavigationLink(value: capsule.id) {
+                        CapsuleRow(capsule: capsule)
+                    }
+                    // 同列表模式 —— 移默认高亮，并带按下下沉手感。
+                    .buttonStyle(.pressableCard)
+                    .contextMenu { capsuleContextMenu(capsule) }
+                }
+            }
+        }
+        .padding(.horizontal, VoxlueSpacing.lg)
+        // 滚动惯性 —— 段落滑入/滑出视口时轻微降透明与缩放，
+        // 像相纸从暗处被推到灯下（§11.1 微动画：滚动惯性）。
+        .scrollTransition(axis: .vertical) { content, phase in
+            content
+                .opacity(phase.isIdentity ? 1 : 0.75)
+                .scaleEffect(phase.isIdentity ? 1 : 0.98)
+        }
+        .transition(.opacity.combined(with: .move(edge: .top)))
     }
 
     /// contact-sheet 首切提示横幅 —— MarginNote 形态 + 朱红「知道了」按钮，
