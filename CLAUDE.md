@@ -13,7 +13,7 @@ voxlue「声音胶囊」—— iOS 26 / SwiftUI 应用（移动应用创新赛�
 ## 常用命令
 
 ```bash
-# 包单元测试（108 测例，最常用的验证手段）
+# 包单元测试（141 测例，最常用的验证手段）
 cd VoxlueKit && swift test
 
 # 只跑单个测试 / 某个 suite
@@ -24,6 +24,11 @@ scripts/run-sim.sh              # 增量构建 + 装 + 启
 scripts/run-sim.sh --fresh      # 卸载重装（清 NSUserDefaults / SwiftData）
 scripts/run-sim.sh --build-only
 DEVICE="iPhone 17 Pro" scripts/run-sim.sh
+
+# 屏幕巡检截图（无 XCUITest 环境的目视验收；先 --build-only 再跑）
+scripts/tour-shots.sh                      # 19 屏 · dark，产物 design/tour-shots/
+scripts/tour-shots.sh --appearance light   # light 形态
+scripts/tour-shots.sh shelf-grid detail    # 只巡指定屏（名单见 ScreenTour.Target）
 
 # 直接 xcodebuild —— 必须带 CODE_SIGNING_ALLOWED=NO（见下）
 xcodebuild -project voxule/voxule.xcodeproj -scheme voxule \

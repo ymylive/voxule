@@ -488,6 +488,9 @@ struct CapsuleDetailView: View {
     }
 
     private func prepare() {
+        // pause 先于空数据早退 —— 从正在播放的邻居切进一枚无音频胶囊时，
+        // 旧声音不应继续放（评审指出的早退路径遗漏）。
+        player.pause()
         guard let data = capsule.audioData, !data.isEmpty else {
             loaded = false
             return
@@ -496,7 +499,6 @@ struct CapsuleDetailView: View {
             // 每次 onAppear 都把本胶囊音频重新装入共享播放器：env.player 是全局单例，
             // 从邻居详情返回后它可能仍持有邻居的音频；旧的一次性 `!loaded` 守卫会跳过
             // 重装，导致按下播放放出的是邻居的声音、还把本枚错标成已听（D6）。
-            player.pause()
             try player.load(data)
             loaded = true
         } catch {
