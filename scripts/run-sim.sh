@@ -57,8 +57,12 @@ echo "✓ built: $APP_PATH"
 if [[ $BUILD_ONLY -eq 1 ]]; then exit 0; fi
 
 # 找到目标设备 UDID（包含 booted 或 shutdown 都行，先尝试启动）。
+# 用 grep+sed 取 UDID —— macOS 默认 BSD awk 不支持 gawk 的 `match(str, re, arr)`
+# 三参形式；用 POSIX 工具更便携。
 UDID=$(xcrun simctl list devices available \
-       | awk -v d="$DEVICE" 'index($0, d " (") { match($0, /\(([0-9A-F-]+)\)/, m); print m[1]; exit }')
+       | grep -F "$DEVICE (" \
+       | head -1 \
+       | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
 if [[ -z "${UDID:-}" ]]; then
   echo "✗ no simulator named '$DEVICE'" >&2
   exit 1
